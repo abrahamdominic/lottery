@@ -28,12 +28,13 @@ pragma solidity ^0.8.13;
  * @author Onchain DevRel
  * @version 1.0
  * @notice This contract is for creating a sample raffle system.
- * @dev Implements Chainlink VRFv2.5
+ * @dev Implements Chainlink VRFv2.5 (placeholder)
  */
-
 contract Raffle {
-    /*Error*/ 
+    /* Errors */
     error SendMoreToEnterRaffle();
+    error RaffleNotReady();
+    error NoPlayers();
 
     uint256 private immutable i_entranceFee;
     // @dev The duration of the lottery in seconds
@@ -44,35 +45,63 @@ contract Raffle {
 
     /* Events */
     event RaffleEntered(address indexed player);
+    event WinnerPicked(address indexed winner, uint256 amount);
 
     constructor(uint256 entranceFe, uint256 interval) {
-        i_entranceFee = entranceFee;
+        // Fix: use the correct parameter name entranceFe
+        i_entranceFee = entranceFe;
         i_interval = interval;
         s_lastTimeStamp = block.timestamp;
     }
-   function  enterRaffle()  external payable {
-    // require(msg.value >= i_entranceFee, "Not enough ETH to enter raffle");
-    if (msg.value < i_entranceFee) {
-        revert SendMoreToEnterRaffle();
+
+    function enterRaffle() external payable {
+        if (msg.value < i_entranceFee) {
+            revert SendMoreToEnterRaffle();
+        }
+        s_players.push(payable(msg.sender));
+        emit RaffleEntered(msg.sender);
     }
-    s_players.push(payable(msg.sender));
-    // 1. Make migration easier
-    // 2. Makes front end "indexing easier"
-    emit RaffleEntered(msg.sender);
 
-   }
+    // 1. Get random number (placeholder: timestamp-based, not secure)
+    // 2. Use that number to pick a winner
+    // 3. Send the money to the winner
+    function pickWinner() external {
+        if (block.timestamp - s_lastTimeStamp < i_interval) {
+            revert RaffleNotReady();
+        }
+        if (s_players.length == 0) {
+            revert NoPlayers();
+        }
 
-// 1. Get random number
-// 2. Use that number to pick a winner
-// 3. Send the money to the winner
-   function pickWinner() external {
-    // check to see if enough time has passed
-    uint256 indexOfWinner =  block.timestamp % s_players.length;
-    address payable winner = s_players[indexOfWinner];
-    winner.transfer(address(this).balance);
-    // reset the players array
-    s_players = new address payable[](0);
+        uint256 indexOfWinner = block.timestamp % s_players.length;
+        address payable winner = s_players[indexOfWinner];
 
-   }
+        uint256 prize = address(this).balance;
+        (bool success, ) = winner.call{value: prize}("");
+        require(success, "Prize transfer failed");
 
+        emit WinnerPicked(winner, prize);
+
+        // reset the players array and timestamp
+        delete s_players;
+        s_lastTimeStamp = block.timestamp;
+    }
+
+    // View functions
+    function getEntranceFee() external view returns (uint256) {
+        return i_entranceFee;
+    }
+
+    function getInterval() external view returns (uint256) {
+        return i_interval;
+    }
+
+    function getPlayers() external view returns (address payable[] memory) {
+        return s_players;
+    }
+
+    function getLastTimeStamp() external view returns (uint256) {
+        return s_lastTimeStamp;
+    }
 }
+
