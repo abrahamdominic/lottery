@@ -24,6 +24,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+
 /* @title Raffle Contract
  * @author Onchain DevRel
  * @version 1.0
@@ -73,6 +75,20 @@ contract Raffle {
             revert NoPlayers();
         }
 
+           requestId = s_vrfCoordinator.requestRandomWords(
+      VRFV2PlusClient.RandomWordsRequest({
+        keyHash: s_keyHash,
+        subId: s_subscriptionId,
+        requestConfirmations: requestConfirmations,
+        callbackGasLimit: callbackGasLimit,
+        numWords: numWords,
+        extraArgs: VRFV2PlusClient._argsToBytes(
+          // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
+          VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
+        )
+      })
+    );
+
         uint256 indexOfWinner = block.timestamp % s_players.length;
         address payable winner = s_players[indexOfWinner];
 
@@ -105,3 +121,4 @@ contract Raffle {
     }
 }
 
+    
