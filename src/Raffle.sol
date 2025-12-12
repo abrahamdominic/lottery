@@ -27,7 +27,7 @@ import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/V
 
 /**
  * @title Raffle Contract (VRF v2.5)
- * @author Onchain
+ * @author Onchain DevRel
  * @notice A secure raffle system using Chainlink VRF
  */
 contract Raffle is VRFConsumerBaseV2Plus {
