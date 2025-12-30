@@ -49,19 +49,17 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint32 private constant CALLBACK_GAS_LIMIT = 200000;
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private constant NUM_WORDS = 1;
+    uint256 private constant  callbackGasLimit = CALLBACK_GAS_LIMIT;
+    uint16 private constant requestConfirmations = REQUEST_CONFIRMATIONS;
 
     /* Events */
     event RaffleEntered(address indexed player);
     event WinnerRequested(uint256 indexed requestId);
     event WinnerPicked(address indexed winner, uint256 amount);
 
-    constructor(
-        uint256 entranceFee,
-        uint256 interval,
-        address vrfCoordinator,
-        bytes32 keyHash,
-        uint256 subscriptionId
-    ) VRFConsumerBaseV2Plus(vrfCoordinator) {
+    constructor(uint256 entranceFee, uint256 interval, address vrfCoordinator, bytes32 keyHash, uint256 subscriptionId)
+        VRFConsumerBaseV2Plus(vrfCoordinator)
+    {
         i_entranceFee = entranceFee;
         i_interval = interval;
 
@@ -70,47 +68,49 @@ contract Raffle is VRFConsumerBaseV2Plus {
         i_subscriptionId = subscriptionId;
 
         s_lastTimeStamp = block.timestamp;
+        //i_callbackGasLimit = callbackGasLimit;
     }
 
-    /** ENTER RAFFLE */
+    /**
+     * ENTER RAFFLE
+     */
     function enterRaffle() external payable {
         if (msg.value < i_entranceFee) revert SendMoreToEnterRaffle();
         s_players.push(payable(msg.sender));
         emit RaffleEntered(msg.sender);
     }
 
-    /** REQUEST RANDOMNESS */
+    /**
+     * REQUEST RANDOMNESS
+     */
     function pickWinner() external {
-        if (block.timestamp - s_lastTimeStamp < i_interval)
+        if (block.timestamp - s_lastTimeStamp < i_interval) {
             revert RaffleNotReady();
+        }
         if (s_players.length == 0) revert NoPlayers();
 
-        VRFV2PlusClient.RandomWordsRequest memory req = VRFV2PlusClient
-            .RandomWordsRequest({
-                keyHash: i_keyHash,
-                subId: i_subscriptionId,
-                requestConfirmations: REQUEST_CONFIRMATIONS,
-                callbackGasLimit: CALLBACK_GAS_LIMIT,
-                numWords: NUM_WORDS,
-                extraArgs: VRFV2PlusClient._argsToBytes(
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
-                )
-            });
+        VRFV2PlusClient.RandomWordsRequest memory req = VRFV2PlusClient.RandomWordsRequest({
+            keyHash: i_keyHash,
+            subId: i_subscriptionId,
+            requestConfirmations: REQUEST_CONFIRMATIONS,
+            callbackGasLimit: CALLBACK_GAS_LIMIT,
+            numWords: NUM_WORDS,
+            extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
+        });
 
         uint256 requestId = s_vrfCoordinator.requestRandomWords(req);
         emit WinnerRequested(requestId);
     }
 
-    /** VRF CALLBACK */
-    function fulfillRandomWords(
-        uint256,
-        uint256[] calldata randomWords
-    ) internal override {
+    /**
+     * VRF CALLBACK
+     */
+    function fulfillRandomWords(uint256, uint256[] calldata randomWords) internal override {
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable winner = s_players[indexOfWinner];
 
         uint256 prize = address(this).balance;
-        (bool success, ) = winner.call{value: prize}("");
+        (bool success,) = winner.call{value: prize}("");
         require(success, "Prize transfer failed");
 
         emit WinnerPicked(winner, prize);
@@ -119,7 +119,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
         s_lastTimeStamp = block.timestamp;
     }
 
-    /** Getters */
+    /**
+     * Getters
+     */
     function getEntranceFee() external view returns (uint256) {
         return i_entranceFee;
     }
