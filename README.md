@@ -1,66 +1,23 @@
-## Foundry
+# Proveably remote raffle contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## What do we want it to do?
 
-Foundry consists of:
+2. Chainlink Automation --> Time based triggers
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
 
-## Documentation
+3. Using Chainlink VRF & Chainlink Automation
+    1. Chainlink VRF --> Randomness
+    2. Chainlink Automation --> Time based triggers
 
-https://book.getfoundry.sh/
+## Tests
 
-## Usage
 
-### Build
+1. Write deploy scripts
+    1. Note, these will not work on zkSync
 
-```shell
-$ forge build
-```
+2. Write tests
+    1. Local chain
+    2. Forked testnet
+    3. Forked mainnet
 
-### Test
 
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
