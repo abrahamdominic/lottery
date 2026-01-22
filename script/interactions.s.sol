@@ -7,6 +7,7 @@ import {HelperConfig} from "./HelperConfig.s.sol";
 import {VRFCoordinatorV2_5Mock} from
     "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {LinkToken} from "../test/unit/mocks/LinkToken.sol";
+import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 /*//////////////////////////////////////////////////////////////
                         CREATE SUBSCRIPTION
@@ -23,18 +24,22 @@ contract CreateSubscription is Script {
         HelperConfig helperConfig = new HelperConfig();
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
 
+        return createSubscription(config.vrfCoordinatorV2_5, config.account);
+    }
+
+    function createSubscription(address vrfCoordinator, address account) public returns (uint256 subId, address) {
         console.log("Creating subscription...");
         console.log("Chain ID:", block.chainid);
 
-        vm.startBroadcast(config.account);
+        vm.startBroadcast(account);
         subId =
-            VRFCoordinatorV2_5Mock(config.vrfCoordinatorV2_5).createSubscription();
+            VRFCoordinatorV2_5Mock(vrfCoordinator).createSubscription();
         vm.stopBroadcast();
 
         console.log("Subscription created with ID:", subId);
         console.log("Update subscriptionId in HelperConfig.s.sol");
 
-        return (subId, config.vrfCoordinatorV2_5);
+        return (subId, vrfCoordinator);
     }
 }
 
@@ -96,8 +101,8 @@ contract FundSubscription is Script {
 //////////////////////////////////////////////////////////////*/
 contract AddConsumer is Script {
     function run() external {
-        address consumer = vm.envAddress("CONSUMER_ADDRESS");
-        addConsumerUsingConfig(consumer);
+        address mostRecentlyDeployed = DevOpsTools.get_most_recent_deployment("Raffle", block.chainid);
+        addConsumerUsingConfig(mostRecentlyDeployed);
     }
 
     function addConsumerUsingConfig(address consumer) public {
