@@ -24,7 +24,7 @@ contract DeployRaffle is Script {
                 networkConfig.vrfCoordinatorV2_5
             ) = createSubscription.createSubscription(
                 networkConfig.vrfCoordinatorV2_5,
-                msg.sender
+                networkConfig.account
             );
 
             // Fund subscription

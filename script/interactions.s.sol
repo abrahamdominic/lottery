@@ -17,16 +17,12 @@ contract CreateSubscription is Script {
         createSubscriptionUsingConfig();
     }
 
-    function createSubscriptionUsingConfig()
-        public
-        returns (uint256 subId, address vrfCoordinator)
-    {
+    function createSubscriptionUsingConfig() public returns (uint256, address) {
         HelperConfig helperConfig = new HelperConfig();
-        HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
-
-        return createSubscription(config.vrfCoordinatorV2_5, config.account);
+        address vrfCoordinator = helperConfig.getConfig().vrfCoordinatorV2_5;
+        address account = helperConfig.getConfig().account;
+        return createSubscription(vrfCoordinator, account);
     }
-
     function createSubscription(address vrfCoordinator, address account) public returns (uint256 subId, address) {
         console.log("Creating subscription...");
         console.log("Chain ID:", block.chainid);
@@ -75,22 +71,26 @@ contract FundSubscription is Script {
         console.log("VRF Coordinator:", vrfCoordinator);
         console.log("Chain ID:", block.chainid);
 
-        vm.startBroadcast(account);
+        
 
         if (block.chainid == 31337) {
+            vm.startBroadcast();
             VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription(
                 subscriptionId,
-                FUND_AMOUNT
+                FUND_AMOUNT * 100
             );
+            vm.stopBroadcast();
         } else {
+            vm.startBroadcast();
             LinkToken(linkToken).transferAndCall(
                 vrfCoordinator,
                 FUND_AMOUNT,
                 abi.encode(subscriptionId)
             );
+            vm.stopBroadcast();
         }
 
-        vm.stopBroadcast();
+        
 
         console.log("Subscription funded");
     }
